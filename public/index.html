@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruby Mock Bank</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --base:#0f1117;--surf:#161b27;--surf2:#1c2333;--surf3:#21293a;
+  --border:#30363d;--border2:#21293a;
+  --blue:#58a6ff;--green:#3fb950;--red:#f85149;--yellow:#e3b341;--purple:#bc8cff;
+  --cyan:#39d353;--orange:#ffa657;
+  --muted:#8b949e;--text:#e6edf3;--text2:#c9d1d9;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+  --nav-w:230px;--hh:48px;
+}
+html,body{height:100%;background:var(--base);color:var(--text);font-family:var(--sans);font-size:14px}
+button{font-family:var(--sans);cursor:pointer}
+input,select,textarea{font-family:var(--sans)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* header */
+#hdr{position:fixed;top:0;left:0;right:0;height:var(--hh);background:var(--surf);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px 0 0;z-index:100}
+.hd-l{display:flex;align-items:center;width:var(--nav-w);padding:0 16px;border-right:1px solid var(--border);height:100%}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;font-weight:600}
+.brand-icon{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,#1f6feb,#58a6ff);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.brand-tag{font-size:10px;color:var(--muted);background:rgba(56,139,253,.15);border:1px solid rgba(56,139,253,.3);padding:1px 6px;border-radius:3px;margin-left:4px}
+.hd-r{display:flex;align-items:center;gap:14px}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,185,80,.4)}70%{box-shadow:0 0 0 6px rgba(63,185,80,0)}100%{box-shadow:0 0 0 0 rgba(63,185,80,.4)}}
+.live{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.env-badge{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;padding:3px 8px;border-radius:4px;background:rgba(232,179,65,.12);color:var(--yellow);border:1px solid rgba(232,179,65,.25)}
+.hdb{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:5px;font-size:12px;font-weight:500;background:var(--surf3);color:var(--text2);border:1px solid var(--border);cursor:pointer;transition:.15s}
+.hdb:hover{border-color:var(--blue);color:var(--blue)}
+
+/* layout */
+#layout{display:flex;margin-top:var(--hh);min-height:calc(100vh - var(--hh))}
+
+/* nav */
+#nav{width:var(--nav-w);flex-shrink:0;background:var(--surf);border-right:1px solid var(--border);padding:10px 0;position:fixed;top:var(--hh);height:calc(100vh - var(--hh));overflow-y:auto}
+.ng{margin-bottom:4px}
+.nl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding:8px 16px 4px}
+.ni{display:flex;align-items:center;gap:9px;padding:6px 16px;font-size:13px;color:var(--muted);cursor:pointer;transition:.12s;position:relative}
+.ni:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.ni.on{color:var(--blue);background:rgba(88,166,255,.08)}
+.ni.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--blue);border-radius:0 2px 2px 0}
+.nd{height:1px;background:var(--border);margin:8px 16px}
+
+/* main */
+#main{margin-left:var(--nav-w);flex:1;padding:28px 32px;max-width:1200px}
+.page{display:none}.page.on{display:block}
+
+/* page header */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.ph-t{font-size:20px;font-weight:600;line-height:1.2}
+.ph-s{font-size:13px;color:var(--muted);margin-top:3px}
+.ph-a{display:flex;gap:8px;align-items:center}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:.15s;line-height:1}
+.btn-p{background:#1f6feb;color:#fff}.btn-p:hover{background:#388bfd}
+.btn-o{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-o:hover{border-color:var(--blue);color:var(--blue)}
+.btn-g{background:transparent;color:var(--muted);border:1px solid transparent}.btn-g:hover{background:var(--surf3);color:var(--text)}
+.btn-d{background:rgba(248,81,73,.1);color:var(--red);border:1px solid rgba(248,81,73,.3)}.btn-d:hover{background:rgba(248,81,73,.2)}
+.btn-sm{padding:4px 10px;font-size:12px}.btn-xs{padding:3px 8px;font-size:11px}
+
+/* kpi */
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:16px 18px}
+.kl{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+.kv{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1;margin-bottom:4px}
+.kv.bl{color:var(--blue)}.kv.gr{color:var(--green)}.kv.ye{color:var(--yellow)}.kv.cy{color:var(--cyan)}
+.ks{font-size:11px;color:var(--muted)}
+
+/* cards */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:8px;margin-bottom:16px}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.ct{font-size:13px;font-weight:600}
+.cb{padding:0}.cp{padding:18px}
+
+/* tables */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{border-bottom:1px solid var(--border)}
+th{padding:9px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid var(--border2);color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.bg{background:rgba(63,185,80,.1);color:var(--green);border:1px solid rgba(63,185,80,.2)}
+.bb{background:rgba(88,166,255,.1);color:var(--blue);border:1px solid rgba(88,166,255,.2)}
+.by{background:rgba(227,179,65,.1);color:var(--yellow);border:1px solid rgba(227,179,65,.2)}
+.br{background:rgba(248,81,73,.1);color:var(--red);border:1px solid rgba(248,81,73,.2)}
+.bp{background:rgba(188,140,255,.1);color:var(--purple);border:1px solid rgba(188,140,255,.2)}
+.bm{background:var(--surf3);color:var(--muted);border:1px solid var(--border)}
+.bo{background:rgba(255,166,87,.1);color:var(--orange);border:1px solid rgba(255,166,87,.2)}
+
+/* amounts */
+.ag{font-family:var(--mono);font-weight:600;color:var(--green)}
+.ar{font-family:var(--mono);font-weight:600;color:var(--red)}
+.am{font-family:var(--mono);font-weight:500}
+.mono{font-family:var(--mono)}.muted{color:var(--muted)}.sm{font-size:12px}
+
+/* forms */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ff{grid-column:1/-1}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fld input,.fld select{background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:8px 11px;color:var(--text);font-size:13px;outline:none;transition:.15s}
+.fld input:focus,.fld select:focus{border-color:var(--blue)}
+.fld select option{background:var(--surf2)}
+.fld input::placeholder{color:var(--muted)}
+
+/* two col */
+.tc{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* json */
+.jout{background:var(--base);border:1px solid var(--border);border-radius:6px;padding:14px;font-family:var(--mono);font-size:12px;color:var(--green);overflow:auto;max-height:320px;white-space:pre-wrap;line-height:1.7}
+.je{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;color:var(--muted);font-size:12px;gap:6px}
+.je-icon{font-size:28px;opacity:.3}
+
+/* OTP box */
+.otp-box{background:rgba(63,185,80,.06);border:1px solid rgba(63,185,80,.2);border-radius:6px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.otp-num{font-family:var(--mono);font-size:36px;font-weight:700;color:var(--green);letter-spacing:.25em}
+.otp-mr{text-align:right}
+.otp-ml{font-size:10px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em}
+.otp-mv{font-family:var(--mono);font-size:11px;color:var(--text2)}
+
+/* terminal */
+.term{background:var(--base);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:var(--mono);font-size:11.5px;height:260px;overflow-y:auto}
+.lr{display:flex;gap:10px;padding:2px 0;border-bottom:1px solid rgba(48,54,61,.3)}
+.lt{color:var(--muted);min-width:72px}.lm{min-width:38px;font-weight:600}
+.lget{color:var(--green)}.lpost{color:var(--blue)}.lpatch{color:var(--yellow)}.ldel{color:var(--red)}
+.lp{color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ls{min-width:28px;text-align:right}
+.lok{color:var(--green)}.lerr{color:var(--red)}
+
+/* endpoint */
+.ep{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:5px;background:var(--surf2);border:1px solid var(--border2);margin-bottom:6px;font-family:var(--mono);font-size:12px}
+.em{font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;min-width:44px;text-align:center;letter-spacing:.04em}
+.emg{background:rgba(63,185,80,.12);color:var(--green)}
+.emp{background:rgba(88,166,255,.12);color:var(--blue)}
+.empa{background:rgba(255,166,87,.12);color:var(--orange)}
+.emd{background:rgba(248,81,73,.12);color:var(--red)}
+.epath{flex:1;color:var(--text)}.edesc{font-size:11px;color:var(--muted)}
+
+/* cfg */
+.cfg{background:var(--base);border:1px solid var(--border);border-radius:6px;padding:4px 0;margin-bottom:10px;font-family:var(--mono);font-size:12px}
+.cr{display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border2)}
+.cr:last-child{border:none}.ck{color:var(--muted)}.cv{color:var(--blue)}
+
+/* bal hero */
+.bh{text-align:center;padding:24px}
+.bc{font-size:13px;color:var(--muted);margin-bottom:4px}
+.ba{font-family:var(--mono);font-size:48px;font-weight:700;color:var(--green);line-height:1}
+.bk{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+
+/* empty */
+.emp-s{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:var(--muted);text-align:center;gap:8px}
+.emp-i{font-size:32px;opacity:.25;margin-bottom:4px}
+.emp-t{font-size:13px;font-weight:500}.emp-d{font-size:12px;opacity:.7}
+
+/* mini chart */
+.mc{display:flex;align-items:flex-end;gap:3px;height:40px;padding:4px 0}
+.bar{flex:1;background:rgba(88,166,255,.3);border-radius:2px 2px 0 0;min-height:2px;transition:height .3s}
+.bar:hover{background:var(--blue)}
+
+/* acct card */
+.ac{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;transition:.15s}
+.ac:hover{border-color:var(--blue)}
+.ai{display:flex;align-items:center;gap:12px}
+.av{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.an{font-size:13px;font-weight:500}.anum{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:1px}
+.ab{text-align:right}.abv{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--green)}.abk{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* detail grid */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.detail-item{background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:10px 14px}
+.detail-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.detail-value{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text)}
+
+/* bank card */
+.bnk-card{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;transition:.15s}
+.bnk-card:hover{border-color:var(--border)}
+.bnk-code{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--blue);min-width:42px}
+.bnk-info{flex:1;margin-left:14px}
+.bnk-name{font-size:13px;font-weight:500;color:var(--text)}
+.bnk-meta{font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+.bnk-actions{display:flex;gap:6px;align-items:center}
+
+/* modal */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.ov.open{display:flex}
+.modal{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:24px;width:480px;max-width:95vw}
+.mt{font-size:16px;font-weight:600;margin-bottom:18px}
+.ma{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* toast */
+#toast{position:fixed;bottom:24px;right:24px;z-index:400;background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:11px 16px;font-size:13px;max-width:300px;transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.tok{border-color:var(--green);color:var(--green)}
+#toast.terr{border-color:var(--red);color:var(--red)}
+#toast.tinfo{border-color:var(--blue);color:var(--blue)}
+
+/* warning banner */
+.warn{background:rgba(227,179,65,.06);border:1px solid rgba(227,179,65,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--yellow);margin-bottom:16px}
+
+/* info banner */
+.info{background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:16px}
+
+/* loading spinner */
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div class="hd-l">
+    <div class="brand">
+      <div class="brand-icon">RB</div>
+      Mock Bank
+      <span class="brand-tag">SANDBOX</span>
+    </div>
+  </div>
+  <div class="hd-r">
+    <div class="live"><div class="pulse-dot"></div><span id="hd-live">connected</span></div>
+    <div class="env-badge">PORT 4000</div>
+    <button class="hdb" onclick="go('seed')">⚡ Seed data</button>
+    <button class="hdb" onclick="go('api')">🔌 API docs</button>
+  </div>
+</div>
+
+<div id="layout">
+  <nav id="nav">
+    <div class="ng">
+      <div class="nl">Overview</div>
+      <div class="ni on" data-page="dashboard"  onclick="go('dashboard')"><span>◈</span> Dashboard</div>
+      <div class="ni"    data-page="accounts"   onclick="go('accounts')"><span>◻</span> Accounts</div>
+      <div class="ni"    data-page="banks"       onclick="go('banks')"><span>🏦</span> Bank List</div>
+      <div class="ni"    data-page="transactions" onclick="go('transactions')"><span>⇄</span> Transactions</div>
+      <div class="ni"    data-page="otps"        onclick="go('otps')"><span>◉</span> OTP Store</div>
+    </div>
+    <div class="nd"></div>
+    <div class="ng">
+      <div class="nl">Simulate API</div>
+      <div class="ni" data-page="validate"  onclick="go('validate')"><span>⊕</span> Validate Account</div>
+      <div class="ni" data-page="verify"    onclick="go('verify')"><span>✓</span> Verify OTP</div>
+      <div class="ni" data-page="acctdetail" onclick="go('acctdetail')"><span>◻</span> Account Details</div>
+      <div class="ni" data-page="transfer"  onclick="go('transfer')"><span>↗</span> Transfer</div>
+      <div class="ni" data-page="txstatus"  onclick="go('txstatus')"><span>◎</span> Transfer Status</div>
+      <div class="ni" data-page="balance"   onclick="go('balance')"><span>◈</span> Balance</div>
+      <div class="ni" data-page="airtime"   onclick="go('airtime')"><span>📶</span> Airtime</div>
+      <div class="ni" data-page="data"      onclick="go('data')"><span>📡</span> Data Bundle</div>
+      <div class="ni" data-page="bill"      onclick="go('bill')"><span>🧾</span> Bill Payment</div>
+      <div class="ni" data-page="statement" onclick="go('statement')"><span>≡</span> Statement</div>
+    </div>
+    <div class="nd"></div>
+    <div class="ng">
+      <div class="nl">Developer</div>
+      <div class="ni" data-page="api"  onclick="go('api')"><span>⊞</span> API Reference</div>
+      <div class="ni" data-page="logs" onclick="go('logs')"><span>▶</span> Request Logs</div>
+      <div class="ni" data-page="seed" onclick="go('seed')"><span>⊛</span> Seed Data</div>
+    </div>
+  </nav>
+
+  <main id="main">
+
+    <!-- ═══ DASHBOARD ════════════════════════════════════════════════════════ -->
+    <div class="page on" id="pg-dashboard">
+      <div class="ph">
+        <div><div class="ph-t">Dashboard</div><div class="ph-s">Live data from MongoDB — same cluster as Ruby platform</div></div>
+        <div class="ph-a">
+          <button class="btn btn-o btn-sm" onclick="go('accounts')">View accounts</button>
+          <button class="btn btn-p btn-sm" onclick="go('seed')">⚡ Seed data</button>
+        </div>
+      </div>
+      <div class="kg">
+        <div class="kpi"><div class="kl">Total Accounts</div><div class="kv bl" id="k-acc">—</div><div class="ks">across all banks</div></div>
+        <div class="kpi"><div class="kl">Total Balance</div><div class="kv gr" id="k-bal">—</div><div class="ks">combined funds</div></div>
+        <div class="kpi"><div class="kl">Transactions</div><div class="kv ye" id="k-txn">—</div><div class="ks">this session</div></div>
+        <div class="kpi"><div class="kl">Banks / Active OTPs</div><div class="kv cy" id="k-otp">—</div><div class="ks">banks · pending OTPs</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="card"><div class="ch"><div class="ct">Accounts by Bank</div></div><div class="cb" id="dash-accts"></div></div>
+        <div class="card">
+          <div class="ch"><div class="ct">Transaction Volume</div></div>
+          <div class="cp">
+            <div class="mc" id="dash-chart"></div>
+            <div style="margin-top:8px;font-size:11px;color:var(--muted);font-family:var(--mono)" id="dash-chart-lbl">No data</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Recent Transactions</div><button class="btn btn-g btn-xs" onclick="go('transactions')">View all →</button></div>
+        <div class="cb tw"><table><thead><tr><th>Reference</th><th>Type</th><th>Account</th><th>Amount</th><th>Balance After</th><th>Status</th><th>Time</th></tr></thead><tbody id="dash-txns"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ═══ ACCOUNTS ══════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-accounts">
+      <div class="ph">
+        <div><div class="ph-t">Accounts</div><div class="ph-s">All simulated bank accounts — stored in MongoDB</div></div>
+        <div class="ph-a"><button class="btn btn-p" onclick="openModal()">+ New account</button></div>
+      </div>
+      <div class="card"><div class="cb tw">
+        <table><thead><tr><th>Account Number</th><th>Name</th><th>Bank</th><th>Type</th><th>Tier</th><th>KYC</th><th>Balance (Kobo)</th><th>Balance (₦)</th><th>Actions</th></tr></thead>
+        <tbody id="accts-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- ═══ BANK LIST ═════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-banks">
+      <div class="ph">
+        <div><div class="ph-t">Bank List</div><div class="ph-s">Supported banks returned by GET /mock-bank/banks — managed in MongoDB</div></div>
+        <div class="ph-a"><button class="btn btn-p" onclick="openBankModal()">+ Add bank</button></div>
+      </div>
+      <div class="info">ℹ Banks are <strong>not wiped</strong> when you Clear Data — they are configuration. Use "Clear All" to reset everything including banks.</div>
+      <div id="banks-list"></div>
+    </div>
+
+    <!-- ═══ TRANSACTIONS ══════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-transactions">
+      <div class="ph">
+        <div><div class="ph-t">Transaction Ledger</div><div class="ph-s">Every debit, credit, airtime, data and bill triggered by Ruby or this dashboard</div></div>
+        <button class="btn btn-d btn-sm" onclick="clearAll()">Clear all data</button>
+      </div>
+      <div class="card"><div class="cb tw">
+        <table><thead><tr><th>Bank Reference</th><th>Ruby Reference</th><th>Type</th><th>Account</th><th>Amount</th><th>Balance After</th><th>Narration</th><th>Time</th></tr></thead>
+        <tbody id="txns-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- ═══ OTP STORE ═════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-otps">
+      <div class="ph"><div><div class="ph-t">OTP Store</div><div class="ph-s">All OTPs generated — saved to MongoDB in real time</div></div></div>
+      <div class="warn">⚠ Dev bypass active — OTP <span style="font-family:var(--mono);font-weight:700">123456</span> always passes, regardless of the generated code.</div>
+      <div class="card"><div class="cb tw">
+        <table><thead><tr><th>OTP Reference</th><th>Account</th><th>Bank</th><th>Code</th><th>Expires</th><th>Status</th></tr></thead>
+        <tbody id="otps-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- ═══ VALIDATE ACCOUNT ══════════════════════════════════════════════════ -->
+    <div class="page" id="pg-validate">
+      <div class="ph"><div><div class="ph-t">Validate Account</div><div class="ph-s">POST /mock-bank/validate-account → resolves account name + generates OTP</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld"><label>Account Number</label><input id="v-num" placeholder="0123456789" maxlength="10"></div>
+              <div class="fld"><label>Bank Code</label><select id="v-bank"><option value="044">044 — Access Bank</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith Bank</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doValidate()">▶ Validate account</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="val-out"><div class="je"><div class="je-icon">◎</div><span>Run a validation to see the response</span></div></div></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Generated OTPs (from MongoDB)</div><button class="btn btn-g btn-xs" onclick="loadOtps()">Refresh</button></div>
+        <div class="cb tw"><table><thead><tr><th>Reference</th><th>Account</th><th>Code</th><th>Expires</th><th>Status</th></tr></thead><tbody id="val-otps-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- ═══ VERIFY OTP ════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-verify">
+      <div class="ph"><div><div class="ph-t">Verify OTP</div><div class="ph-s">POST /mock-bank/verify-otp → marks OTP used, returns user token</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld ff"><label>OTP Reference</label><input id="vr-ref" placeholder="OTP-ACC-1234567890"></div>
+              <div class="fld"><label>OTP Code</label><input id="vr-otp" placeholder="123456" maxlength="6"></div>
+              <div class="fld"><label>Account Number</label><input id="vr-num" placeholder="0123456789"></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doVerify()">▶ Verify OTP</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="ver-out"><div class="je"><div class="je-icon">✓</div><span>Run a verification to see the response</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ ACCOUNT DETAILS ═══════════════════════════════════════════════════ -->
+    <div class="page" id="pg-acctdetail">
+      <div class="ph"><div><div class="ph-t">Account Details</div><div class="ph-s">GET /mock-bank/account-details/:accountNumber — full profile, BVN mask, tier, KYC</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld"><label>Account Number</label><input id="ad-num" placeholder="0123456789" maxlength="10"></div>
+              <div class="fld"><label>Bank Code</label><select id="ad-bank"><option value="044">044 — Access Bank</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith Bank</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doAcctDetail()">▶ Get account details</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="ad-out"><div class="je"><div class="je-icon">◻</div><span>Query an account to see its full details</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ TRANSFER ══════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-transfer">
+      <div class="ph"><div><div class="ph-t">Execute Transfer</div><div class="ph-s">POST /mock-bank/transfer → deducts from source, credits destination in MongoDB</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld ff"><label>Ruby Reference</label><input id="tr-ref" placeholder="RUBY-1234567890-abc123"></div>
+              <div class="fld"><label>Source Account</label><input id="tr-src" placeholder="0123456789"></div>
+              <div class="fld"><label>Source Bank</label><select id="tr-sb"><option value="044">044 — Access</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+              <div class="fld"><label>Recipient Account</label><input id="tr-dst" placeholder="9876543210"></div>
+              <div class="fld"><label>Recipient Bank</label><select id="tr-db"><option value="058">058 — GTBank</option><option value="044">044 — Access</option><option value="057">057 — Zenith</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+              <div class="fld"><label>Amount (Kobo)</label><input id="tr-amt" type="number" placeholder="50000"></div>
+              <div class="fld ff"><label>Narration</label><input id="tr-nar" placeholder="Test transfer"></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doTransfer()">▶ Execute transfer</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="tr-out"><div class="je"><div class="je-icon">↗</div><span>Execute a transfer to see the response</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ TRANSFER STATUS ════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-txstatus">
+      <div class="ph"><div><div class="ph-t">Transfer Status</div><div class="ph-s">GET /mock-bank/transfer-status/:reference — query by Ruby or bank reference</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld ff"><label>Reference (Ruby or Bank)</label><input id="ts-ref" placeholder="RUBY-1234567890-abc123 or ACC-1234-ABCDE"></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doTxStatus()">▶ Query status</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="ts-out"><div class="je"><div class="je-icon">◎</div><span>Enter a reference to check its status</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ BALANCE ═══════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-balance">
+      <div class="ph"><div><div class="ph-t">Get Balance</div><div class="ph-s">GET /mock-bank/balance/:accountNumber — reads live balance from MongoDB</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld"><label>Account Number</label><input id="bal-num" placeholder="0123456789"></div>
+              <div class="fld"><label>Bank Code</label><select id="bal-bank"><option value="044">044 — Access</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doBalance()">▶ Get balance</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="bal-out"><div class="je"><div class="je-icon">◈</div><span>Query a balance to see the response</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ AIRTIME ════════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-airtime">
+      <div class="ph"><div><div class="ph-t">Purchase Airtime</div><div class="ph-s">POST /mock-bank/airtime → deducts from account balance in MongoDB</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld ff"><label>Ruby Reference</label><input id="air-ref" placeholder="RUBY-1234567890-abc123"></div>
+              <div class="fld"><label>Source Account Number</label><input id="air-num" placeholder="0123456789"></div>
+              <div class="fld"><label>Source Bank Code</label><select id="air-bank"><option value="044">044 — Access</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+              <div class="fld"><label>Phone Number</label><input id="air-phone" placeholder="+2348012345678"></div>
+              <div class="fld"><label>Network</label><select id="air-net"><option>MTN</option><option>Airtel</option><option>Glo</option><option>9mobile</option></select></div>
+              <div class="fld"><label>Amount (Kobo)</label><input id="air-amt" type="number" placeholder="50000"></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doAirtime()">▶ Purchase airtime</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="air-out"><div class="je"><div class="je-icon">📶</div><span>Run airtime purchase to see response</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ DATA BUNDLE ════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-data">
+      <div class="ph"><div><div class="ph-t">Data Bundle</div><div class="ph-s">POST /mock-bank/data → deducts from account balance in MongoDB</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld ff"><label>Ruby Reference</label><input id="dt-ref" placeholder="RUBY-1234567890-abc123"></div>
+              <div class="fld"><label>Source Account Number</label><input id="dt-num" placeholder="0123456789"></div>
+              <div class="fld"><label>Source Bank Code</label><select id="dt-bank"><option value="044">044 — Access</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+              <div class="fld"><label>Phone Number</label><input id="dt-phone" placeholder="+2348012345678"></div>
+              <div class="fld"><label>Network</label><select id="dt-net"><option>MTN</option><option>Airtel</option><option>Glo</option><option>9mobile</option></select></div>
+              <div class="fld"><label>Plan</label><select id="dt-plan">
+                <option value="Daily">Daily</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Monthly">Monthly</option>
+                <option value="Quarterly">Quarterly</option>
+              </select></div>
+              <div class="fld"><label>Bundle (e.g. 1GB, 5GB, 10GB)</label><input id="dt-bundle" placeholder="1GB"></div>
+              <div class="fld"><label>Amount (Kobo)</label><input id="dt-amt" type="number" placeholder="150000"></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doData()">▶ Buy data bundle</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="dt-out"><div class="je"><div class="je-icon">📡</div><span>Run data purchase to see response</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ BILL PAYMENT ════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-bill">
+      <div class="ph"><div><div class="ph-t">Bill Payment</div><div class="ph-s">POST /mock-bank/bill → deducts from account balance in MongoDB</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld ff"><label>Ruby Reference</label><input id="bl-ref" placeholder="RUBY-1234567890-abc123"></div>
+              <div class="fld"><label>Source Account Number</label><input id="bl-num" placeholder="0123456789"></div>
+              <div class="fld"><label>Source Bank Code</label><select id="bl-bank"><option value="044">044 — Access</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+              <div class="fld"><label>Biller Code</label><input id="bl-biller" placeholder="DSTV, NEPA, LAWMA..."></div>
+              <div class="fld"><label>Biller Name (optional)</label><input id="bl-billername" placeholder="DSTV Subscription"></div>
+              <div class="fld"><label>Customer Reference / Meter No.</label><input id="bl-custref" placeholder="12345678901"></div>
+              <div class="fld"><label>Amount (Kobo)</label><input id="bl-amt" type="number" placeholder="450000"></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doBill()">▶ Pay bill</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="bl-out"><div class="je"><div class="je-icon">🧾</div><span>Run a bill payment to see response</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ STATEMENT ══════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-statement">
+      <div class="ph"><div><div class="ph-t">Account Statement</div><div class="ph-s">GET /mock-bank/statement/:accountNumber — paginated transaction history</div></div></div>
+      <div class="tc">
+        <div class="card">
+          <div class="ch"><div class="ct">Request</div></div>
+          <div class="cp">
+            <div class="fg">
+              <div class="fld"><label>Account Number</label><input id="stmt-num" placeholder="0123456789"></div>
+              <div class="fld"><label>Bank Code</label><select id="stmt-bank"><option value="044">044 — Access</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+              <div class="fld"><label>Page</label><input id="stmt-page" type="number" value="1" min="1"></div>
+              <div class="fld"><label>Limit</label><input id="stmt-limit" type="number" value="20" min="1" max="100"></div>
+            </div>
+            <br><button class="btn btn-p" onclick="doStatement()">▶ Get statement</button>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Response</div></div><div class="cp" id="stmt-out"><div class="je"><div class="je-icon">≡</div><span>Query a statement to see response</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ API REFERENCE ══════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-api">
+      <div class="ph"><div><div class="ph-t">API Reference</div><div class="ph-s">All endpoints this mock bank exposes — point your Ruby adapters here</div></div></div>
+      <div class="card">
+        <div class="ch"><div class="ct">Server Config</div></div>
+        <div class="cp">
+          <div class="cfg">
+            <div class="cr"><span class="ck">Base URL</span><span class="cv">http://localhost:4000</span></div>
+            <div class="cr"><span class="ck">API Key Header</span><span class="cv">X-Mock-Bank-Key: mock-ruby-dev-2026</span></div>
+            <div class="cr"><span class="ck">Content-Type</span><span class="cv">application/json</span></div>
+            <div class="cr"><span class="ck">Dev OTP Bypass</span><span style="color:var(--yellow);font-family:var(--mono)">123456 always passes</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Bank API Endpoints — called by Ruby adapters</div></div>
+        <div class="cp" id="ep-bank"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Dashboard API Endpoints — called by this UI</div></div>
+        <div class="cp" id="ep-dash"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Ruby .env — point adapters at mock bank</div></div>
+        <div class="cp">
+          <div class="cfg">
+            <div class="cr"><span class="ck">MOCK_BANK_BASE_URL</span><span class="cv">http://localhost:4000</span></div>
+            <div class="cr"><span class="ck">MOCK_BANK_API_KEY</span><span class="cv">mock-ruby-dev-2026</span></div>
+            <div class="cr"><span class="ck">USE_MOCK_BANK</span><span style="color:var(--green);font-family:var(--mono)">true</span></div>
+          </div>
+          <p style="font-size:12px;color:var(--muted)">Set <span style="font-family:var(--mono);color:var(--blue)">USE_MOCK_BANK=false</span> to switch to live bank APIs in production.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LOGS ═══════════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-logs">
+      <div class="ph">
+        <div><div class="ph-t">Request Logs</div><div class="ph-s">All API calls made through this simulator</div></div>
+        <button class="btn btn-g btn-sm" onclick="LOGS=[];renderLogs()">Clear</button>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Live feed</div><div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)"><div class="pulse-dot"></div> recording</div></div>
+        <div class="cp" style="padding:12px"><div class="term" id="terminal"><div style="color:var(--muted)">// Waiting for requests...</div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ SEED DATA ══════════════════════════════════════════════════════════ -->
+    <div class="page" id="pg-seed">
+      <div class="ph"><div><div class="ph-t">Seed Data</div><div class="ph-s">Populate MongoDB with test accounts and banks for Ruby testing</div></div></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+        <div>
+          <div class="card">
+            <div class="ch"><div class="ct">Quick seed — 5 accounts + 10 banks</div></div>
+            <div class="cp">
+              <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">Creates 5 test accounts across Access, GTBank and Zenith, and seeds 10 Nigerian banks. Existing records are not overwritten.</p>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-p" onclick="doSeed()">⚡ Seed accounts + banks</button>
+                <button class="btn btn-d" onclick="clearAll()">🗑 Clear transactions + accounts</button>
+                <button class="btn btn-d" style="opacity:.7" onclick="clearAllInclBanks()">🗑 Clear everything</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ct">Accounts that will be seeded</div></div>
+            <div class="cb tw">
+              <table><thead><tr><th>Account</th><th>Name</th><th>Bank</th><th>Balance</th><th>Dev OTP</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">0123456789</td><td>SAMUEL OLOKOR</td><td><span class="badge bb">ACCESS 044</span></td><td class="ag">₦350,000</td><td><span class="mono" style="color:var(--yellow)">123456</span></td></tr>
+                <tr><td class="mono">9876543210</td><td>JOHN ADEYEMI</td><td><span class="badge bp">GTBank 058</span></td><td class="ag">₦200,000</td><td><span class="mono" style="color:var(--yellow)">123456</span></td></tr>
+                <tr><td class="mono">1122334455</td><td>AMAKA OKONKWO</td><td><span class="badge bg">ZENITH 057</span></td><td class="ag">₦500,000</td><td><span class="mono" style="color:var(--yellow)">123456</span></td></tr>
+                <tr><td class="mono">5544332211</td><td>IBRAHIM MUSA</td><td><span class="badge bb">ACCESS 044</span></td><td class="ag">₦75,000</td><td><span class="mono" style="color:var(--yellow)">123456</span></td></tr>
+                <tr><td class="mono">6677889900</td><td>CHIDINMA EZE</td><td><span class="badge bp">GTBank 058</span></td><td class="ag">₦1,200,000</td><td><span class="mono" style="color:var(--yellow)">123456</span></td></tr>
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="ch"><div class="ct">Create single account</div></div>
+            <div class="cp">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div class="fld"><label>Account Number</label><input id="na-num" placeholder="0123456789" maxlength="10"></div>
+                <div class="fld"><label>Bank</label><select id="na-bank"><option value="044">044 — Access Bank</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith Bank</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+                <div class="fld"><label>Account Name</label><input id="na-name" placeholder="JOHN DOE"></div>
+                <div class="fld"><label>Type</label><select id="na-type"><option value="savings">Savings</option><option value="current">Current</option></select></div>
+                <div class="fld"><label>Balance (Kobo)</label><input id="na-bal" type="number" placeholder="35000000"></div>
+                <button class="btn btn-p" onclick="createAcct()">Create account</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Account Modal -->
+<div class="ov" id="modal">
+  <div class="modal">
+    <div class="mt">New Test Account</div>
+    <div class="fg">
+      <div class="fld"><label>Account Number</label><input id="m-num" placeholder="0123456789" maxlength="10"></div>
+      <div class="fld"><label>Bank</label><select id="m-bank"><option value="044">044 — Access Bank</option><option value="058">058 — GTBank</option><option value="057">057 — Zenith Bank</option><option value="011">011 — First Bank</option><option value="033">033 — UBA</option></select></div>
+      <div class="fld ff"><label>Account Name</label><input id="m-name" placeholder="FULL NAME IN CAPS"></div>
+      <div class="fld"><label>Type</label><select id="m-type"><option value="savings">Savings</option><option value="current">Current</option></select></div>
+      <div class="fld"><label>Balance (Kobo)</label><input id="m-bal" type="number" placeholder="35000000"></div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-g" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-p" onclick="createAcctModal()">Create account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bank Modal -->
+<div class="ov" id="bank-modal">
+  <div class="modal">
+    <div class="mt">Add Bank</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="fld"><label>Bank Code (3 digits)</label><input id="bm-code" placeholder="044" maxlength="3"></div>
+      <div class="fld"><label>Bank Name</label><input id="bm-name" placeholder="Access Bank"></div>
+      <div class="fld"><label>Short Name</label><input id="bm-short" placeholder="Access"></div>
+      <div class="fld"><label>NIP Code</label><input id="bm-nip" placeholder="044"></div>
+      <div class="fld"><label>USSD Code</label><input id="bm-ussd" placeholder="*901#"></div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-g" onclick="closeBankModal()">Cancel</button>
+      <button class="btn btn-p" onclick="createBank()">Add bank</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const BASE = '';
+const BN = {'044':'Access Bank','058':'GTBank','057':'Zenith Bank','011':'First Bank','033':'UBA','070':'Fidelity','214':'FCMB','232':'Sterling','035':'Wema','050':'Ecobank'};
+const BC = {'044':'#1f6feb','058':'#6e40c9','057':'#2ea043','011':'#e3b341','033':'#f85149','070':'#0a7c59','214':'#a83257','232':'#16537e','035':'#5a3290','050':'#2c6fad'};
+let LOGS = [];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmt = k => '₦' + (k/100).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});
+const jout = obj => '<pre class="jout">'+JSON.stringify(obj,null,2)+'</pre>';
+
+function toast(msg, type='ok'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show t'+type;
+  setTimeout(() => t.className = '', 2800);
+}
+
+function addLog(method, path, status){
+  const time = new Date().toLocaleTimeString('en-GB',{hour12:false});
+  LOGS.unshift({time, method, path, status});
+  if(LOGS.length > 200) LOGS.pop();
+  if(document.getElementById('pg-logs').classList.contains('on')) renderLogs();
+}
+
+async function api(method, path, body){
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(BASE + path, opts);
+  const data = await res.json();
+  addLog(method, path, res.status);
+  return { ok: res.ok, status: res.status, data };
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function go(id){
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  const pg = document.getElementById('pg-'+id);
+  if(pg) pg.classList.add('on');
+  document.querySelectorAll('.ni').forEach(n => {
+    if(n.dataset.page === id) n.classList.add('on');
+  });
+  const loaders = {
+    dashboard:  loadDash,
+    accounts:   loadAccts,
+    banks:      loadBanks,
+    transactions: loadTxns,
+    otps:       loadOtps,
+    validate:   loadOtps,
+    api:        renderEps,
+    logs:       renderLogs,
+  };
+  if(loaders[id]) loaders[id]();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDash(){
+  const [stats, txns, accts] = await Promise.all([
+    api('GET','/api/stats'),
+    api('GET','/api/transactions?limit=8'),
+    api('GET','/api/accounts'),
+  ]);
+
+  if(stats.ok){
+    const s = stats.data.data;
+    document.getElementById('k-acc').textContent = s.accounts;
+    document.getElementById('k-bal').textContent = fmt(s.totalBalanceKobo);
+    document.getElementById('k-txn').textContent = s.transactions;
+    document.getElementById('k-otp').textContent = (s.banks||0) + ' · ' + s.activeOtps;
+    document.getElementById('hd-live').textContent = s.accounts + ' accounts live';
+  }
+
+  const el = document.getElementById('dash-accts');
+  if(accts.ok && accts.data.data.length){
+    el.innerHTML = '<div style="padding:8px">'+accts.data.data.slice(0,5).map(a=>`
+      <div class="ac">
+        <div class="ai">
+          <div class="av" style="background:${BC[a.bankCode]||'#555'}">${a.accountName.charAt(0)}</div>
+          <div><div class="an">${a.accountName}</div><div class="anum">${a.accountNumber}</div></div>
+        </div>
+        <div class="ab">
+          <div class="abv">${fmt(a.balanceKobo)}</div>
+          <div class="abk">${BN[a.bankCode]||a.bankCode}</div>
+        </div>
+      </div>
+    `).join('')+'</div>';
+  } else {
+    el.innerHTML = '<div class="emp-s"><div class="emp-i">🏦</div><div class="emp-t">No accounts</div><div class="emp-d">Go to Seed Data →</div></div>';
+  }
+
+  const chartEl = document.getElementById('dash-chart');
+  const labelEl = document.getElementById('dash-chart-lbl');
+  if(txns.ok && txns.data.data.transactions.length){
+    const recent = txns.data.data.transactions.slice(0,12).reverse();
+    const max = Math.max(...recent.map(t=>t.amountKobo),1);
+    chartEl.innerHTML = recent.map(t=>`<div class="bar" style="height:${Math.max(4,Math.round((t.amountKobo/max)*36))}px" title="${fmt(t.amountKobo)}"></div>`).join('');
+    labelEl.textContent = txns.data.data.total + ' total · latest: ' + fmt(txns.data.data.transactions[0].amountKobo);
+  } else {
+    chartEl.innerHTML = '';
+    labelEl.textContent = 'No transactions yet';
+  }
+
+  const tbody = document.getElementById('dash-txns');
+  if(txns.ok && txns.data.data.transactions.length){
+    tbody.innerHTML = txns.data.data.transactions.map(t => txnRow(t)).join('');
+  } else {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="emp-s"><div class="emp-i">💳</div><div class="emp-t">No transactions yet</div></div></td></tr>';
+  }
+}
+
+const TXN_BADGE = {debit:'by',credit:'bg',airtime:'bp',bill:'bb',data:'bo'};
+
+function txnRow(t){
+  return `<tr>
+    <td class="mono sm">${t.bankReference.slice(0,24)}</td>
+    <td><span class="badge ${TXN_BADGE[t.type]||'bm'}">${t.type.toUpperCase()}</span></td>
+    <td class="mono sm">${t.accountNumber}</td>
+    <td class="${t.type==='credit'?'ag':'ar'}">${t.type==='credit'?'+':'-'}${fmt(t.amountKobo)}</td>
+    <td class="am">${fmt(t.balanceAfterKobo)}</td>
+    <td><span class="badge bg">SUCCESS</span></td>
+    <td class="sm muted">${new Date(t.createdAt).toLocaleTimeString()}</td>
+  </tr>`;
+}
+
+// ── Accounts ──────────────────────────────────────────────────────────────────
+async function loadAccts(){
+  const r = await api('GET','/api/accounts');
+  const tbody = document.getElementById('accts-body');
+  if(!r.ok || !r.data.data.length){
+    tbody.innerHTML = '<tr><td colspan="9"><div class="emp-s"><div class="emp-i">🏦</div><div class="emp-t">No accounts yet</div><div class="emp-d">Create one or seed test data</div></div></td></tr>';
+    return;
+  }
+  const tierBadge = {tier1:'br',tier2:'by',tier3:'bg'};
+  const kycBadge  = {verified:'bg',pending:'by',failed:'br'};
+  tbody.innerHTML = r.data.data.map(a=>`<tr>
+    <td class="mono">${a.accountNumber}</td>
+    <td>${a.accountName}</td>
+    <td><span class="badge bb">${a.bankCode}</span></td>
+    <td>${a.accountType}</td>
+    <td><span class="badge ${tierBadge[a.tier]||'bm'}">${(a.tier||'tier3').toUpperCase()}</span></td>
+    <td><span class="badge ${kycBadge[a.kycStatus]||'bm'}">${(a.kycStatus||'verified').toUpperCase()}</span></td>
+    <td class="mono">${a.balanceKobo.toLocaleString()}</td>
+    <td class="ag">${fmt(a.balanceKobo)}</td>
+    <td>
+      <button class="btn btn-o btn-xs" onclick="creditAcct('${a._id}','${a.accountNumber}')">+ Credit</button>
+      <button class="btn btn-d btn-xs" style="margin-left:4px" onclick="deleteAcct('${a._id}','${a.accountNumber}')">Delete</button>
+    </td>
+  </tr>`).join('');
+}
+
+async function creditAcct(id, num){
+  const amt = parseInt(prompt('Credit amount in Kobo (e.g. 10000000 = ₦100,000):'));
+  if(!amt || isNaN(amt)) return;
+  const r = await api('PATCH', `/api/accounts/${id}/credit`, { amount: amt });
+  if(r.ok){ toast('Credited '+fmt(amt)+' to '+num); loadAccts(); loadDash(); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function deleteAcct(id, num){
+  if(!confirm('Delete account '+num+'?')) return;
+  const r = await api('DELETE', `/api/accounts/${id}`);
+  if(r.ok){ toast('Account deleted'); loadAccts(); loadDash(); }
+  else toast(r.data.error||'Error','err');
+}
+
+// ── Banks ─────────────────────────────────────────────────────────────────────
+async function loadBanks(){
+  const r = await api('GET','/api/banks');
+  const el = document.getElementById('banks-list');
+  if(!r.ok || !r.data.data.length){
+    el.innerHTML = '<div class="emp-s"><div class="emp-i">🏦</div><div class="emp-t">No banks yet</div><div class="emp-d">Seed data or add a bank manually</div></div>';
+    return;
+  }
+  el.innerHTML = r.data.data.map(b=>`
+    <div class="bnk-card">
+      <div class="bnk-code">${b.bankCode}</div>
+      <div class="bnk-info">
+        <div class="bnk-name">${b.bankName} ${b.shortName && b.shortName !== b.bankName ? '<span style="color:var(--muted);font-size:12px">('+b.shortName+')</span>' : ''}</div>
+        <div class="bnk-meta">NIP: ${b.nipCode||'—'} &nbsp;·&nbsp; USSD: ${b.ussdCode||'—'}</div>
+      </div>
+      <div class="bnk-actions">
+        <span class="badge ${b.isActive?'bg':'bm'}">${b.isActive?'ACTIVE':'DISABLED'}</span>
+        <button class="btn btn-o btn-xs" onclick="toggleBank('${b._id}')">${b.isActive?'Disable':'Enable'}</button>
+        <button class="btn btn-d btn-xs" onclick="deleteBank('${b._id}','${b.bankName}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openBankModal(){ document.getElementById('bank-modal').classList.add('open'); }
+function closeBankModal(){ document.getElementById('bank-modal').classList.remove('open'); }
+
+async function createBank(){
+  const r = await api('POST','/api/banks',{
+    bankCode:  document.getElementById('bm-code').value.trim(),
+    bankName:  document.getElementById('bm-name').value.trim(),
+    shortName: document.getElementById('bm-short').value.trim(),
+    nipCode:   document.getElementById('bm-nip').value.trim(),
+    ussdCode:  document.getElementById('bm-ussd').value.trim(),
+  });
+  if(r.ok){ closeBankModal(); loadBanks(); toast('Bank added'); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function toggleBank(id){
+  const r = await api('PATCH',`/api/banks/${id}/toggle`);
+  if(r.ok){ loadBanks(); toast('Bank status updated'); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function deleteBank(id, name){
+  if(!confirm('Delete bank '+name+'?')) return;
+  const r = await api('DELETE',`/api/banks/${id}`);
+  if(r.ok){ loadBanks(); toast('Bank deleted'); }
+  else toast(r.data.error||'Error','err');
+}
+
+// ── Transactions ──────────────────────────────────────────────────────────────
+async function loadTxns(){
+  const r = await api('GET','/api/transactions?limit=100');
+  const tbody = document.getElementById('txns-body');
+  if(!r.ok || !r.data.data.transactions.length){
+    tbody.innerHTML = '<tr><td colspan="8"><div class="emp-s"><div class="emp-i">📒</div><div class="emp-t">No transactions</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = r.data.data.transactions.map(t=>`<tr>
+    <td class="mono sm">${t.bankReference}</td>
+    <td class="mono sm muted">${t.rubyReference||'—'}</td>
+    <td><span class="badge ${TXN_BADGE[t.type]||'bm'}">${t.type.toUpperCase()}</span></td>
+    <td class="mono">${t.accountNumber}</td>
+    <td class="${t.type==='credit'?'ag':'ar'}">${t.type==='credit'?'+':'-'}${fmt(t.amountKobo)}</td>
+    <td class="am">${fmt(t.balanceAfterKobo)}</td>
+    <td class="sm muted">${t.narration||'—'}</td>
+    <td class="sm muted">${new Date(t.createdAt).toLocaleString()}</td>
+  </tr>`).join('');
+}
+
+// ── OTPs ──────────────────────────────────────────────────────────────────────
+async function loadOtps(){
+  const r = await api('GET','/api/otps');
+  const render = (id) => {
+    const tbody = document.getElementById(id);
+    if(!tbody) return;
+    if(!r.ok || !r.data.data.length){
+      tbody.innerHTML = '<tr><td colspan="6"><div class="emp-s" style="padding:20px"><div class="emp-i">◉</div><div class="emp-t">No OTPs yet</div></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = r.data.data.map(o=>`<tr>
+      <td class="mono sm">${o.reference}</td>
+      <td class="mono">${o.accountNumber}</td>
+      <td><span class="badge bb">${o.bankCode}</span></td>
+      <td><span class="mono" style="font-size:20px;font-weight:700;color:${o.used?'var(--muted)':'var(--yellow)'};letter-spacing:0.15em">${o.code}</span></td>
+      <td class="sm muted">${new Date(o.expiresAt).toLocaleTimeString()}</td>
+      <td><span class="badge ${o.used?'bm':'bg'}">${o.used?'USED':'ACTIVE'}</span></td>
+    </tr>`).join('');
+  };
+  render('otps-body');
+  render('val-otps-body');
+}
+
+// ── API Simulations ───────────────────────────────────────────────────────────
+async function doValidate(){
+  const num = document.getElementById('v-num').value.trim();
+  const bank = document.getElementById('v-bank').value;
+  if(!num || num.length !== 10){ toast('Account number must be 10 digits','err'); return; }
+
+  const r = await api('POST','/mock-bank/validate-account',{ accountNumber: num, bankCode: bank });
+  if(r.ok){
+    const d = r.data.data;
+    document.getElementById('val-out').innerHTML = `
+      <div class="otp-box">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Generated OTP (dev: 123456 always works)</div>
+          <div class="otp-num">123456</div>
+        </div>
+        <div class="otp-mr">
+          <div class="otp-ml">OTP Reference</div>
+          <div class="otp-mv">${d.otpReference}</div>
+        </div>
+      </div>
+      ${jout(d)}`;
+    loadOtps();
+    toast('Account validated — OTP saved to MongoDB');
+  } else {
+    document.getElementById('val-out').innerHTML = jout(r.data);
+    toast(r.data.error||'Error','err');
+  }
+}
+
+async function doVerify(){
+  const ref = document.getElementById('vr-ref').value.trim();
+  const otp = document.getElementById('vr-otp').value.trim();
+  const num = document.getElementById('vr-num').value.trim();
+  if(!ref || !otp){ toast('Fill in all fields','err'); return; }
+  const r = await api('POST','/mock-bank/verify-otp',{ otpReference: ref, otp, accountNumber: num });
+  document.getElementById('ver-out').innerHTML = jout(r.data.data || r.data);
+  if(r.ok){ loadOtps(); toast('OTP verified — token issued'); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function doAcctDetail(){
+  const num  = document.getElementById('ad-num').value.trim();
+  const bank = document.getElementById('ad-bank').value;
+  if(!num){ toast('Enter account number','err'); return; }
+  const r = await api('GET',`/mock-bank/account-details/${num}?bankCode=${bank}`);
+  if(r.ok){
+    const d = r.data.data;
+    document.getElementById('ad-out').innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-item"><div class="detail-label">Account Name</div><div class="detail-value">${d.accountName}</div></div>
+        <div class="detail-item"><div class="detail-label">Account Type</div><div class="detail-value">${d.accountType}</div></div>
+        <div class="detail-item"><div class="detail-label">Bank</div><div class="detail-value">${d.bankName} (${d.bankCode})</div></div>
+        <div class="detail-item"><div class="detail-label">Currency</div><div class="detail-value">${d.currency}</div></div>
+        <div class="detail-item"><div class="detail-label">BVN (masked)</div><div class="detail-value">${d.bvnMask}</div></div>
+        <div class="detail-item"><div class="detail-label">Account Tier</div><div class="detail-value">${d.tier}</div></div>
+        <div class="detail-item"><div class="detail-label">KYC Status</div><div class="detail-value">${d.kycStatus}</div></div>
+        <div class="detail-item"><div class="detail-label">Phone</div><div class="detail-value">${d.phone}</div></div>
+      </div>
+      ${jout(d)}`;
+    toast('Account details loaded');
+  } else {
+    document.getElementById('ad-out').innerHTML = jout(r.data);
+    toast(r.data.error||'Error','err');
+  }
+}
+
+async function doTransfer(){
+  const ref = document.getElementById('tr-ref').value.trim();
+  const src = document.getElementById('tr-src').value.trim();
+  const sb  = document.getElementById('tr-sb').value;
+  const dst = document.getElementById('tr-dst').value.trim();
+  const db  = document.getElementById('tr-db').value;
+  const amt = parseInt(document.getElementById('tr-amt').value);
+  const nar = document.getElementById('tr-nar').value.trim() || 'Transfer';
+  if(!src || !dst || !amt){ toast('Fill required fields','err'); return; }
+  const r = await api('POST','/mock-bank/transfer',{
+    reference: ref, sourceAccountNumber: src, sourceBankCode: sb,
+    recipientAccount: dst, recipientBankCode: db, amount: amt, narration: nar
+  });
+  document.getElementById('tr-out').innerHTML = jout(r.data.data || r.data);
+  if(r.ok){ toast('Transfer executed — '+fmt(amt)); loadDash(); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function doTxStatus(){
+  const ref = document.getElementById('ts-ref').value.trim();
+  if(!ref){ toast('Enter a reference','err'); return; }
+  const r = await api('GET',`/mock-bank/transfer-status/${encodeURIComponent(ref)}`);
+  const out = document.getElementById('ts-out');
+  if(r.ok){
+    const d = r.data.data;
+    const sc = d.status === 'success' ? 'var(--green)' : d.status === 'failed' ? 'var(--red)' : 'var(--yellow)';
+    out.innerHTML = `
+      <div style="background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:16px">
+        <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:${sc}">${d.status.toUpperCase()}</div>
+        <div>
+          <div style="font-size:12px;color:var(--muted)">Response Code: <span style="font-family:var(--mono);color:var(--text)">${d.responseCode||'—'}</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Amount: <span class="ag">${fmt(d.amountKobo)}</span></div>
+        </div>
+      </div>
+      ${jout(d)}`;
+    toast('Status: '+d.status);
+  } else {
+    out.innerHTML = jout(r.data);
+    toast(r.data.error||'Error','err');
+  }
+}
+
+async function doBalance(){
+  const num  = document.getElementById('bal-num').value.trim();
+  const bank = document.getElementById('bal-bank').value;
+  if(!num){ toast('Enter account number','err'); return; }
+  const r = await api('GET',`/mock-bank/balance/${num}?bankCode=${bank}`);
+  const bal = r.data.data?.balance ?? 0;
+  document.getElementById('bal-out').innerHTML = `
+    <div class="bh">
+      <div class="bc">NGN Account Balance</div>
+      <div class="ba">${fmt(bal)}</div>
+      <div class="bk">${bal.toLocaleString()} kobo</div>
+    </div>
+    ${jout(r.data.data || r.data)}`;
+  if(r.ok) toast('Balance retrieved');
+  else toast(r.data.error||'Error','err');
+}
+
+async function doAirtime(){
+  const ref   = document.getElementById('air-ref').value.trim();
+  const num   = document.getElementById('air-num').value.trim();
+  const bank  = document.getElementById('air-bank').value;
+  const phone = document.getElementById('air-phone').value.trim();
+  const net   = document.getElementById('air-net').value;
+  const amt   = parseInt(document.getElementById('air-amt').value);
+  if(!num || !phone || !amt){ toast('Fill required fields','err'); return; }
+  const r = await api('POST','/mock-bank/airtime',{
+    reference: ref, sourceAccountNumber: num, bankCode: bank,
+    phoneNumber: phone, network: net, amount: amt
+  });
+  document.getElementById('air-out').innerHTML = jout(r.data.data || r.data);
+  if(r.ok){ toast('Airtime purchased — '+fmt(amt)); loadDash(); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function doData(){
+  const ref    = document.getElementById('dt-ref').value.trim();
+  const num    = document.getElementById('dt-num').value.trim();
+  const bank   = document.getElementById('dt-bank').value;
+  const phone  = document.getElementById('dt-phone').value.trim();
+  const net    = document.getElementById('dt-net').value;
+  const plan   = document.getElementById('dt-plan').value;
+  const bundle = document.getElementById('dt-bundle').value.trim();
+  const amt    = parseInt(document.getElementById('dt-amt').value);
+  if(!num || !phone || !plan || !amt){ toast('Fill required fields','err'); return; }
+  const r = await api('POST','/mock-bank/data',{
+    reference: ref, sourceAccountNumber: num, bankCode: bank,
+    phoneNumber: phone, network: net, plan, bundle, amount: amt
+  });
+  document.getElementById('dt-out').innerHTML = jout(r.data.data || r.data);
+  if(r.ok){ toast(`${net} ${bundle||plan} data purchased`); loadDash(); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function doBill(){
+  const ref      = document.getElementById('bl-ref').value.trim();
+  const num      = document.getElementById('bl-num').value.trim();
+  const bank     = document.getElementById('bl-bank').value;
+  const biller   = document.getElementById('bl-biller').value.trim();
+  const billname = document.getElementById('bl-billername').value.trim();
+  const custref  = document.getElementById('bl-custref').value.trim();
+  const amt      = parseInt(document.getElementById('bl-amt').value);
+  if(!num || !biller || !custref || !amt){ toast('Fill required fields','err'); return; }
+  const r = await api('POST','/mock-bank/bill',{
+    reference: ref, sourceAccountNumber: num, bankCode: bank,
+    billerCode: biller, billerName: billname, customerReference: custref, amount: amt
+  });
+  document.getElementById('bl-out').innerHTML = jout(r.data.data || r.data);
+  if(r.ok){ toast('Bill paid — '+fmt(amt)); loadDash(); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function doStatement(){
+  const num   = document.getElementById('stmt-num').value.trim();
+  const bank  = document.getElementById('stmt-bank').value;
+  const page  = document.getElementById('stmt-page').value;
+  const limit = document.getElementById('stmt-limit').value;
+  if(!num){ toast('Enter account number','err'); return; }
+  const r = await api('GET',`/mock-bank/statement/${num}?bankCode=${bank}&page=${page}&limit=${limit}`);
+  document.getElementById('stmt-out').innerHTML = jout(r.data.data || r.data);
+  if(r.ok) toast((r.data.data?.total||0)+' transactions found');
+  else toast(r.data.error||'Error','err');
+}
+
+// ── Account management ────────────────────────────────────────────────────────
+function openModal(){ document.getElementById('modal').classList.add('open'); }
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+async function createAcctModal(){
+  const r = await api('POST','/api/accounts',{
+    accountNumber: document.getElementById('m-num').value.trim(),
+    bankCode:      document.getElementById('m-bank').value,
+    accountName:   document.getElementById('m-name').value.trim(),
+    accountType:   document.getElementById('m-type').value,
+    balanceKobo:   parseInt(document.getElementById('m-bal').value)||0,
+  });
+  if(r.ok){ closeModal(); loadAccts(); loadDash(); toast('Account created'); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function createAcct(){
+  const r = await api('POST','/api/accounts',{
+    accountNumber: document.getElementById('na-num').value.trim(),
+    bankCode:      document.getElementById('na-bank').value,
+    accountName:   document.getElementById('na-name').value.trim(),
+    accountType:   document.getElementById('na-type').value,
+    balanceKobo:   parseInt(document.getElementById('na-bal').value)||0,
+  });
+  if(r.ok){ toast('Account created'); loadDash(); }
+  else toast(r.data.error||'Error','err');
+}
+
+// ── Seed / Clear ──────────────────────────────────────────────────────────────
+async function doSeed(){
+  const r = await api('POST','/api/seed');
+  if(r.ok){
+    const d = r.data.data;
+    toast(`${d.seededAccounts} accounts + ${d.seededBanks} banks seeded`);
+    loadDash();
+    go('dashboard');
+  } else toast(r.data.error||'Error','err');
+}
+
+async function clearAll(){
+  if(!confirm('Clear all transactions, OTPs and accounts from MongoDB?\n(Banks will NOT be cleared)')) return;
+  const r = await api('DELETE','/api/clear');
+  if(r.ok){ toast('Transactions, OTPs and accounts cleared'); loadDash(); }
+  else toast(r.data.error||'Error','err');
+}
+
+async function clearAllInclBanks(){
+  if(!confirm('⚠ Clear EVERYTHING including banks?\nThis cannot be undone.')) return;
+  const r = await api('DELETE','/api/clear-all');
+  if(r.ok){ toast('All mock bank data cleared'); loadDash(); loadBanks(); }
+  else toast(r.data.error||'Error','err');
+}
+
+// ── Logs ──────────────────────────────────────────────────────────────────────
+function renderLogs(){
+  const term = document.getElementById('terminal');
+  if(!LOGS.length){ term.innerHTML = '<div style="color:var(--muted)">// No requests yet</div>'; return; }
+  const mc = {'GET':'lget','POST':'lpost','PATCH':'lpatch','DELETE':'ldel'};
+  term.innerHTML = LOGS.map(l=>`
+    <div class="lr">
+      <span class="lt">${l.time}</span>
+      <span class="lm ${mc[l.method]||''}">${l.method}</span>
+      <span class="lp">${l.path}</span>
+      <span class="ls ${l.status<300?'lok':'lerr'}">${l.status}</span>
+    </div>`).join('');
+}
+
+// ── API Reference ─────────────────────────────────────────────────────────────
+function renderEps(){
+  const bank = [
+    {m:'GET', p:'/mock-bank/banks',d:'Bank list — active banks from MongoDB'},
+    {m:'POST',p:'/mock-bank/validate-account',d:'Resolve account name + generate OTP (step 1)'},
+    {m:'POST',p:'/mock-bank/verify-otp',d:'Verify OTP → issue user token (step 2)'},
+    {m:'GET', p:'/mock-bank/account-details/:accountNumber',d:'Full account profile: name, type, BVN mask, tier, KYC'},
+    {m:'POST',p:'/mock-bank/transfer',d:'Execute funds transfer — idempotent on rubyReference'},
+    {m:'GET', p:'/mock-bank/transfer-status/:reference',d:'Query transfer by Ruby or bank reference'},
+    {m:'GET', p:'/mock-bank/balance/:accountNumber',d:'Get account balance in kobo'},
+    {m:'POST',p:'/mock-bank/airtime',d:'Purchase airtime — deducts from balance'},
+    {m:'POST',p:'/mock-bank/data',d:'Data bundle subscription — phone + network + plan + bundle'},
+    {m:'POST',p:'/mock-bank/bill',d:'Pay a bill — billerCode + customerReference'},
+    {m:'GET', p:'/mock-bank/statement/:accountNumber',d:'Paginated transaction history'},
+    {m:'GET', p:'/health',d:'Health check'},
+  ];
+  const dash = [
+    {m:'GET',    p:'/api/banks',d:'List all banks'},
+    {m:'POST',   p:'/api/banks',d:'Add a bank'},
+    {m:'PATCH',  p:'/api/banks/:id/toggle',d:'Enable / disable a bank'},
+    {m:'DELETE', p:'/api/banks/:id',d:'Delete a bank'},
+    {m:'GET',    p:'/api/accounts',d:'List all mock accounts'},
+    {m:'POST',   p:'/api/accounts',d:'Create a test account'},
+    {m:'PATCH',  p:'/api/accounts/:id/credit',d:'Credit an account balance'},
+    {m:'DELETE', p:'/api/accounts/:id',d:'Deactivate an account'},
+    {m:'GET',    p:'/api/transactions',d:'List all transactions'},
+    {m:'GET',    p:'/api/otps',d:'List all OTPs'},
+    {m:'GET',    p:'/api/stats',d:'Dashboard KPI stats'},
+    {m:'POST',   p:'/api/seed',d:'Seed accounts + banks'},
+    {m:'DELETE', p:'/api/clear',d:'Clear transactions, OTPs, accounts (keeps banks)'},
+    {m:'DELETE', p:'/api/clear-all',d:'Clear everything including banks'},
+  ];
+
+  const methodClass = m => ({GET:'emg',POST:'emp',PATCH:'empa',DELETE:'emd'}[m]||'emg');
+  const ep = (e) => `<div class="ep"><span class="em ${methodClass(e.m)}">${e.m}</span><span class="epath">${e.p}</span><span class="edesc">${e.d}</span></div>`;
+  document.getElementById('ep-bank').innerHTML = bank.map(ep).join('');
+  document.getElementById('ep-dash').innerHTML = dash.map(ep).join('');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderEps();
+loadDash();
+</script>
+</body>
+</html>
